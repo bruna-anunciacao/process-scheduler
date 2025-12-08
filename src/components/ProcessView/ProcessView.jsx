@@ -1,5 +1,3 @@
-// Images
-import closeIcon from "../../assets/close-icon.png";
 // Styles
 import s from "./ProcessView.module.css";
 
@@ -13,10 +11,13 @@ export default function ProcessView({ processes, setProcesses }) {
         deadline: 0,
         arrival: 0,
         priority: 0,
+        period: 0,
+        cycles: 1,
         status: "Waiting",
       },
     ]);
   };
+
   const handleRemove = (id) => {
     return () => {
       setProcesses(
@@ -26,88 +27,122 @@ export default function ProcessView({ processes, setProcesses }) {
       );
     };
   };
+
   const handleInputChange = (id, field, value) => {
     setProcesses(
       processes.map((process) => {
         if (process.id === id) {
+          const parsedValue = parseInt(value);
           return {
             ...process,
-            [field]: parseInt(value),
+            [field]: isNaN(parsedValue) ? 0 : parsedValue,
           };
         }
         return process;
       })
     );
   };
+
   return (
     <section className={s.processViewWrapper}>
       <div onClick={handleAddNewProcess} className={s.addProcessBtn}>
         <p>Criar processo</p>
       </div>
-      {processes.length === 0 ? (
-        <p className={s.noProcess}>Nenhum processo criado</p>
-      ) : (
-        processes.map((process) => (
-          <div key={process.id} className={s.eachProcess}>
-            <div className={s.closeBtn}>
-              <p>ID {process.id}</p>
-              <img
-                src={closeIcon}
-                alt="ícone para deletar o processo"
-                onClick={handleRemove(process.id)}
-              />
-            </div>
-            <div className={s.twoInputs}>
-              <label>
-                Prioridade:
+      {processes.map((process) => (
+        <div key={process.id} className={s.eachProcess}>
+          <div className={s.cardHeader}>
+            <span>Processo #{process.id}</span>
+            <button
+              className={s.deleteBtn}
+              onClick={handleRemove(process.id)}
+              title="Remover"
+            >
+              ×
+            </button>
+          </div>
+          <div className={s.cardBody}>
+            <div className={s.inputsGrid}>
+              <div className={s.inputGroup}>
+                <label>Chegada</label>
                 <input
+                  className={s.styledInput}
                   type="number"
-                  name="processPriority"
-                  value={process.priority}
-                  onChange={(e) =>
-                    handleInputChange(process.id, "priority", e.target.value)
-                  }
-                />
-              </label>
-              <label>
-                Tempo:
-                <input
-                  type="number"
-                  name="processTime"
-                  value={process.time}
-                  onChange={(e) =>
-                    handleInputChange(process.id, "time", e.target.value)
-                  }
-                />
-              </label>
-            </div>
-            <div className={s.twoInputs}>
-              <label>
-                Deadline:
-                <input
-                  type="number"
-                  name="processDeadline"
-                  value={process.deadline}
-                  onChange={(e) =>
-                    handleInputChange(process.id, "deadline", e.target.value)
-                  }
-                />
-              </label>
-              <label>
-                Chegada:
-                <input
-                  type="number"
-                  name="processArrival"
+                  min="0"
                   value={process.arrival}
                   onChange={(e) =>
                     handleInputChange(process.id, "arrival", e.target.value)
                   }
                 />
-              </label>
+              </div>
+
+              <div className={s.inputGroup}>
+                <label>Tempo</label>
+                <input
+                  className={s.styledInput}
+                  type="number"
+                  min="1"
+                  value={process.time}
+                  onChange={(e) =>
+                    handleInputChange(process.id, "time", e.target.value)
+                  }
+                />
+              </div>
+
+              <div className={s.inputGroup}>
+                <label>Deadline</label>
+                <input
+                  className={s.styledInput}
+                  type="number"
+                  min="0"
+                  value={process.deadline}
+                  onChange={(e) =>
+                    handleInputChange(process.id, "deadline", e.target.value)
+                  }
+                />
+              </div>
+
+              <div className={s.inputGroup}>
+                <label>Prioridade</label>
+                <input
+                  className={s.styledInput}
+                  type="number"
+                  min="0"
+                  value={process.priority}
+                  onChange={(e) =>
+                    handleInputChange(process.id, "priority", e.target.value)
+                  }
+                />
+              </div>
+              <div className={s.inputGroup}>
+                <label>Período</label>
+                <input
+                  className={s.styledInput}
+                  type="number"
+                  min="0"
+                  placeholder="0 = Único"
+                  value={process.period}
+                  onChange={(e) =>
+                    handleInputChange(process.id, "period", e.target.value)
+                  }
+                />
+              </div>
+              <div className={s.inputGroup}>
+                <label>Ciclos</label>
+                <input
+                  className={s.styledInput}
+                  type="number"
+                  min="1"
+                  value={process.cycles}
+                  onChange={(e) =>
+                    handleInputChange(process.id, "cycles", e.target.value)
+                  }
+                  disabled={process.period <= 0}
+                />
+              </div>
             </div>
           </div>
-        ))
-      )}
+        </div>
+      ))}
     </section>
   );
 }

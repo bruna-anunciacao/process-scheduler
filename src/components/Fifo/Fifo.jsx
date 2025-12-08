@@ -5,8 +5,6 @@ import s from "./Fifo.module.css";
 import GanttChart from "../GanttChart/GanttChart";
 
 export default function Fifo({
-  quantum,
-  overload,
   processes,
   setReset,
   delay
@@ -18,15 +16,7 @@ export default function Fifo({
 
   useEffect(() => {
     if (processes.length > 0) {
-      const sortedProcesses = processes
-        .filter((process) => process.status === "Waiting")
-        .sort((a, b) => a.arrival - b.arrival)
-        .map((process, index) => ({
-          ...process,
-          arrivalTime: index,
-        }));
-
-      setFifoProcesses(sortedProcesses);
+      callProcesses();
     }
   }, [processes]);
 
@@ -48,34 +38,34 @@ export default function Fifo({
     if (fifoProcesses.length > 0) {
       setReset(false);
       setStartScheduler(true);
-      const processesCopy = [...fifoProcesses];
+      const processesCopy = JSON.parse(JSON.stringify(fifoProcesses));
 
       let currentTime = 0;
-      const processMap = new Map(
-        processesCopy.map((process) => [process.id, { ...process, segments: [], completionTime: 0 }])
-      );
+      const processMap = new Map();
 
-      while (processesCopy.some((process) => process.time > 0)) {
-        const process = processesCopy.find(
-          (p) => p.time > 0 && p.arrival <= currentTime
-        );
-        if (!process) {
-          currentTime++;
-          continue;
-        }
+      processesCopy.forEach(p => {
+          processMap.set(p.id, { ...p, segments: [], completionTime: 0 });
+      });
 
-        // Add waiting segment if the process arrived before the current time
-        if (process.arrival < currentTime) {
-          processMap.get(process.id).segments.push({
-            startTime: process.arrival,
-            endTime: currentTime,
-            isOverload: false,
-            isDeadlineFinished: false,
-            isWaiting: true,
-          });
+      processesCopy.sort((a, b) => a.arrival - b.arrival);
+
+      for (let process of processesCopy) {
+        if (currentTime < process.arrival) {
+             currentTime = process.arrival;
         }
 
         const startTime = currentTime;
+        
+        if (process.arrival < startTime) {
+             processMap.get(process.id).segments.push({
+                startTime: process.arrival,
+                endTime: startTime,
+                isOverload: false,
+                isDeadlineFinished: false,
+                isWaiting: true
+             });
+        }
+
         const endTime = startTime + process.time;
         currentTime = endTime;
 
@@ -91,16 +81,12 @@ export default function Fifo({
         process.time = 0;
       }
 
-      setTurnAroundTime(
-        (
-          Array.from(processMap.values()).reduce(
-            (acc, process) =>
-              acc + (process.completionTime - process.arrival),
-            0
-          ) / processMap.size
-        ).toFixed(2)
+      const totalTurnaround = Array.from(processMap.values()).reduce(
+        (acc, process) => acc + (process.completionTime - process.arrival),
+        0
       );
 
+      setTurnAroundTime((totalTurnaround / processMap.size).toFixed(2));
       setSchedulerMatrix(Array.from(processMap.values()));
     }
   };
@@ -110,29 +96,39 @@ export default function Fifo({
     setReset(true);
     setSchedulerMatrix([]);
     callProcesses();
+    setTurnAroundTime(0);
   };
 
   return (
     <div className={s.fifoWrapper}>
-
       <div className={s.btnWrapper}>
         <button
           onClick={startFIFO}
-          className={startScheduler ? s.disabledBtn : s.startBtn}
+          className={`${s.baseBtn} ${startScheduler ? s.disabledBtn : s.startBtn}`}
           disabled={startScheduler}
         >
-          Iniciar
+          Iniciar Simulação
         </button>
-        <button onClick={resetFIFO} className={s.resetBtn}>
-          Reset
+        
+        <button onClick={resetFIFO} className={`${s.baseBtn} ${s.resetBtn}`}>
+          Resetar
         </button>
       </div>
+
       {startScheduler && (
         <div>
-          <div class="turnaround">
-        <p>TurnAround: {turnAroundTime}</p>
-</div>
-          <GanttChart schedulerMatrix={schedulerMatrix} schedulerType="FIFO" delay={delay} />
+          <div className={s.statsContainer}>
+            <div className={s.turnaroundBadge}>
+               <span>TurnAround Médio:</span>
+               <span className={s.turnaroundValue}>{turnAroundTime}ms</span>
+            </div>
+          </div>
+          
+          <GanttChart 
+            schedulerMatrix={schedulerMatrix} 
+            schedulerType="FIFO" 
+            delay={delay} 
+          />
         </div>
       )}
     </div>

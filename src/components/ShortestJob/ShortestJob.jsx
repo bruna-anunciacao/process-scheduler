@@ -1,7 +1,3 @@
-// Components
-
-// Images
-
 // Imports
 import { useEffect, useState } from "react";
 // Styles
@@ -9,8 +5,6 @@ import s from "./ShortestJob.module.css";
 import GanttChart from "../GanttChart/GanttChart";
 
 export default function ShortestJob({
-  quantum,
-  overload,
   processes,
   setReset,
   delay
@@ -44,28 +38,32 @@ export default function ShortestJob({
     if (sjfProcesses.length > 0) {
       setReset(false);
       setStartScheduler(true);
-      const processesCopy = [...sjfProcesses];
+      
+      const processesCopy = JSON.parse(JSON.stringify(sjfProcesses)); 
   
       let currentTime = 0;
-      const sortedProcesses = processesCopy
-        .filter((process) => process.status === "Waiting")
-        .sort((a, b) => a.time - b.time);
+      
+      const sortedByBurst = [...processesCopy].sort((a, b) => a.time - b.time);
   
-      const processMap = new Map(
-        sortedProcesses.map((process) => [process.id, { ...process, segments: [] }])
-      );
-  
-      while (sortedProcesses.some((process) => process.time > 0)) {
-        const process = sortedProcesses.find(
+      const processMap = new Map();
+      
+      processesCopy.forEach(p => {
+          processMap.set(p.id, { ...p, segments: [] });
+      });
+
+      while (processesCopy.some((process) => process.time > 0)) {
+        
+        const process = sortedByBurst.find(
           (p) => p.time > 0 && p.arrival <= currentTime
         );
+
         if (!process) {
           currentTime++;
           continue;
         }
-  
-        if (process.arrival <= currentTime && process.time > 0 && process.segments.length === 0) {
-          processMap.get(process.id).segments.push({
+
+        if (process.arrival < currentTime && processMap.get(process.id).segments.length === 0) {
+           processMap.get(process.id).segments.push({
             startTime: process.arrival,
             endTime: currentTime,
             isOverload: false,
@@ -91,7 +89,8 @@ export default function ShortestJob({
   
       const turnAroundTimes = Array.from(processMap.values()).map((process) => {
         const arrivalTime = process.arrival;
-        const completionTime = process.segments[process.segments.length - 1].endTime;
+        const lastSegment = process.segments[process.segments.length - 1];
+        const completionTime = lastSegment ? lastSegment.endTime : arrivalTime;
         return completionTime - arrivalTime;
       });
   
@@ -99,7 +98,6 @@ export default function ShortestJob({
       const averageTurnAroundTime = (totalTurnAroundTime / turnAroundTimes.length).toFixed(2);
   
       setTurnAroundTime(averageTurnAroundTime);
-  
       setSchedulerMatrix(Array.from(processMap.values()));
     }
   };
@@ -107,28 +105,40 @@ export default function ShortestJob({
   const resetSJF = () => {
     setStartScheduler(false);
     setReset(true);
+    setSchedulerMatrix([]);
+    setTurnAroundTime(0);
   };
 
   return (
     <div className={s.sjfWrapper}>
+      
       <div className={s.btnWrapper}>
         <button
           onClick={startSJF}
-          className={startScheduler ? s.disabledBtn : s.startBtn}
+          className={`${s.baseBtn} ${startScheduler ? s.disabledBtn : s.startBtn}`}
           disabled={startScheduler}
         >
-          Iniciar
+          Iniciar Simulação
         </button>
-        <button onClick={resetSJF} className={s.resetBtn}>
-          Reset
+        <button onClick={resetSJF} className={`${s.baseBtn} ${s.resetBtn}`}>
+          Resetar
         </button>
       </div>
+
       {startScheduler && (
         <div>
-          <div class="turnaround">
-        <p>TurnAround: {turnAroundTime}</p>
-</div>
-          <GanttChart schedulerMatrix={schedulerMatrix} schedulerType="SJF" delay={delay} />
+          <div className={s.statsContainer}>
+            <div className={s.turnaroundBadge}>
+               <span>TurnAround Médio:</span>
+               <span className={s.turnaroundValue}>{turnAroundTime}ms</span>
+            </div>
+          </div>
+          
+          <GanttChart 
+            schedulerMatrix={schedulerMatrix} 
+            schedulerType="SJF" 
+            delay={delay} 
+          />
         </div>
       )}
     </div>

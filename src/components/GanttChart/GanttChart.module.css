@@ -1,10 +1,26 @@
 .ganttChartWrapper {
+    display: block;
+    width: 100%;
     height: auto;
+    overflow: visible;
+    margin-top: 1.5rem;
+    font-family: 'Inter', sans-serif;
 }
 
 .processName {
-    font-size: 1rem;
-    font-weight: 700;
+    font-size: 0.9rem;
+    font-weight: 600;
+    fill: #374151;
+    dominant-baseline: middle;
 }
 
+.axisLabel {
+    font-size: 0.75rem;
+    font-weight: 500;
+    fill: #9ca3af;
+}
 
+.axisLine {
+    stroke: #e5e7eb;
+    stroke-width: 1;
+}

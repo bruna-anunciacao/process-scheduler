@@ -1,17 +1,18 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import ProcessSubtitle from "../ProcessSubtitle/ProcessSubtitle";
 // Styles
 import s from "./GanttChart.module.css";
 
 export default function GanttChart({ schedulerMatrix, schedulerType, delay }) {
-  const barHeight = 30;
-  const barPadding = 10;
-  const labelPadding = 100;
+  const barHeight = 36;
+  const barPadding = 12;
+  const labelPadding = 110;
+
   const colors = {
-    default: "#3498db",
-    overload: "#e74c3c",
-    deadlineFinished: "#000000",
-    waiting: "#F1C40F",
+    default: "#059669",
+    overload: "#ef4444",
+    deadlineFinished: "#374151",
+    waiting: "#cbd5e1",
   };
 
   const maxTime = schedulerMatrix.reduce(
@@ -19,9 +20,23 @@ export default function GanttChart({ schedulerMatrix, schedulerType, delay }) {
       Math.max(max, ...process.segments.map((segment) => segment.endTime)),
     0
   );
-  const chartHeight = (barHeight + barPadding) * schedulerMatrix.length + 60;
-  const chartWidth =
-    document.getElementById("window").clientWidth - 2 * labelPadding;
+
+  const chartHeight = (barHeight + barPadding) * schedulerMatrix.length + 50;
+  
+  const [chartWidth, setChartWidth] = useState(800);
+
+  useEffect(() => {
+    const updateWidth = () => {
+      const windowElement = document.getElementById("window");
+      if (windowElement) {
+        setChartWidth(windowElement.clientWidth - labelPadding - 40); 
+      }
+    };
+
+    updateWidth();
+    window.addEventListener("resize", updateWidth);
+    return () => window.removeEventListener("resize", updateWidth);
+  }, [labelPadding]);
 
   const [currentMaxTime, setCurrentMaxTime] = useState(0);
 
@@ -37,15 +52,10 @@ export default function GanttChart({ schedulerMatrix, schedulerType, delay }) {
   }, [currentMaxTime, maxTime, delay]);
 
   const getFillColor = (segment) => {
-    if (segment.isOverload) {
-      return colors.overload;
-    } else if (segment.isDeadlineFinished) {
-      return colors.deadlineFinished;
-    } else if (segment.isWaiting) {
-      return colors.waiting;
-    } else {
-      return colors.default;
-    }
+    if (segment.isOverload) return colors.overload;
+    if (segment.isDeadlineFinished) return colors.deadlineFinished;
+    if (segment.isWaiting) return colors.waiting;
+    return colors.default;
   };
 
   return (
@@ -58,19 +68,16 @@ export default function GanttChart({ schedulerMatrix, schedulerType, delay }) {
         {schedulerMatrix.map((process, index) => (
           <g key={process.id}>
             {process.segments.map((segment, segmentIndex) => {
-              if (segment.startTime > currentMaxTime) {
-                return null;
-              }
-
+              if (segment.startTime > currentMaxTime) return null;
+              const safeMaxTime = maxTime === 0 ? 1 : maxTime;
               const barWidth =
                 ((Math.min(segment.endTime, currentMaxTime) -
                   segment.startTime) /
-                  maxTime) *
+                  safeMaxTime) *
                 chartWidth;
               const x =
-                (segment.startTime / maxTime) * chartWidth + labelPadding;
+                (segment.startTime / safeMaxTime) * chartWidth + labelPadding;
               const y = index * (barHeight + barPadding);
-
               return (
                 <rect
                   key={segmentIndex}
@@ -79,34 +86,41 @@ export default function GanttChart({ schedulerMatrix, schedulerType, delay }) {
                   width={barWidth}
                   height={barHeight}
                   fill={getFillColor(segment)}
-                  stroke="#000"
-                  strokeWidth="1"
+                  stroke="#ffffff" 
+                  strokeWidth="2"
+                  rx="6"
                 />
               );
             })}
             <text
               className={s.processName}
-              x={labelPadding - 5}
+              x={labelPadding - 20}
               y={index * (barHeight + barPadding) + barHeight / 2}
-              dy=".35em"
               textAnchor="end"
-              fill="#000"
             >
               {`Processo ${process.id}`}
             </text>
           </g>
         ))}
         {[...Array(currentMaxTime + 1)].map((_, i) => (
-          <text
-            key={i}
-            x={(i / maxTime) * chartWidth + labelPadding - 5}
-            y={chartHeight - 15}
-            dy=".71em"
-            textAnchor="middle"
-            fill="#000"
-          >
-            {i}
-          </text>
+          <g key={i}>
+             <line 
+                x1={(i / (maxTime || 1)) * chartWidth + labelPadding}
+                y1={chartHeight - 25}
+                x2={(i / (maxTime || 1)) * chartWidth + labelPadding}
+                y2={chartHeight - 20}
+                stroke="#e5e7eb"
+                strokeWidth="2"
+             />
+             <text
+                className={s.axisLabel}
+                x={(i / (maxTime || 1)) * chartWidth + labelPadding}
+                y={chartHeight - 5}
+                textAnchor="middle"
+            >
+                {i}
+            </text>
+          </g>
         ))}
       </svg>
       <ProcessSubtitle colors={colors} schedulerType={schedulerType} />

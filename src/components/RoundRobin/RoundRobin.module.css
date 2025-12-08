@@ -1,49 +1,79 @@
-.sjfWrapper {
-    width: 100%;
-
-    text-align: center;
+.rrWrapper {
+  width: 100%;
+  text-align: center;
+  margin-top: 1rem;
+  font-family: 'Inter', sans-serif;
 }
 
 .btnWrapper {
-    padding: 1rem 0;
-
-    display: flex;
-    justify-content: center;
-    gap: 1.2rem;
+  padding: 1rem 0;
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
 }
 
-.btnWrapper button {
-    width: 30%;
-    padding: 0.5rem 1rem;
-    
-    border: none;
-    border-radius: 0.5rem;
-    
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: #fff;
-
-    cursor: pointer;
-    transition: 1s;
+.baseBtn {
+  padding: 12px 32px;
+  border-radius: 8px;
+  border: none;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
-.btnWrapper .startBtn {
-    background: rgb(29, 29, 255);
+.startBtn {
+  background-color: #059669;
+  color: #ffffff;
 }
 
-.btnWrapper .disabledBtn {
-    background: #ccc;
-
-    color: #000;
-
-    cursor: not-allowed;
+.startBtn:hover {
+  background-color: #047857;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(5, 150, 105, 0.3);
 }
 
-.btnWrapper .resetBtn {
-    background:rgb(82, 82, 82);
+.resetBtn {
+  background-color: transparent;
+  border: 1px solid #ef4444;
+  color: #ef4444;
 }
 
-.btnWrapper button:hover {
-    transform: scale(1.05);
+.resetBtn:hover {
+  background-color: #fef2f2;
+  transform: translateY(-2px);
 }
 
+.disabledBtn {
+  background-color: #e5e7eb;
+  color: #9ca3af;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none;
+}
+
+.statsContainer {
+  display: flex;
+  justify-content: center;
+  margin: 1.5rem 0;
+}
+
+.turnaroundBadge {
+  background-color: #f3f4f6;
+  padding: 0.5rem 1.5rem;
+  border-radius: 20px;
+  border: 1px solid #e5e7eb;
+  color: #374151;
+  font-weight: 600;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.turnaroundValue {
+  color: #059669;
+  font-weight: 800;
+  font-size: 1.3rem;
+}
