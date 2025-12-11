@@ -102,18 +102,6 @@ export default function ProcessView({ processes, setProcesses }) {
               </div>
 
               <div className={s.inputGroup}>
-                <label>Prioridade</label>
-                <input
-                  className={s.styledInput}
-                  type="number"
-                  min="0"
-                  value={process.priority}
-                  onChange={(e) =>
-                    handleInputChange(process.id, "priority", e.target.value)
-                  }
-                />
-              </div>
-              <div className={s.inputGroup}>
                 <label>Período</label>
                 <input
                   className={s.styledInput}
