@@ -14,20 +14,38 @@ export default function Header({selectedButton, setSelectedButton, setDelay, del
         <h1>Método:</h1>
         <ul className={s.methodSelection}>
           <li>
-            <button 
+            <button
               className={selectedButton == 0 ? s.selectedButton : s.notSelectedButton}
               onClick={() => setSelectedButton(0)}
             >FIFO</button>
           </li>
           <li>
-            <button 
+            <button
               className={selectedButton == 1 ? s.selectedButton : s.notSelectedButton}
               onClick={() => setSelectedButton(1)}
             >SJF</button>
           </li>
+          <li>
+            <button
+              className={selectedButton == 2 ? s.selectedButton : s.notSelectedButton}
+              onClick={() => setSelectedButton(2)}
+            >RM</button>
+          </li>
+          <li>
+            <button
+              className={selectedButton == 3 ? s.selectedButton : s.notSelectedButton}
+              onClick={() => setSelectedButton(3)}
+            >EDF</button>
+          </li>
+          <li>
+            <button
+              className={selectedButton == 4 ? s.selectedButton : s.notSelectedButton}
+              onClick={() => setSelectedButton(4)}
+            >RR</button>
+          </li>
         </ul>
       </section>
-      <section className={s.wrapperSettings}> 
+      <section className={s.wrapperSettings}>
         {/* <div>
           <p>Quantum:</p>
           <input onChange={(e) => setQuantum(e.target.value)} value={quantum} className={s.inputStyle} type='number' min='1' max='100' step='1' />

@@ -5,6 +5,9 @@ import Header from "./components/Header/Header";
 import ProcessView from "./components/ProcessView/ProcessView";
 import Fifo from "./components/Fifo/Fifo";
 import ShortestJob from "./components/ShortestJob/ShortestJob";
+import RateMonotonic from "./components/RateMonotonic/RateMonotonic";
+import EarliestDeadline from "./components/EarliestDeadline/EarliestDeadline";
+import RoundRobin from "./components/RoundRobin/RoundRobin";
 
 // Styles
 import s from "./App.module.css";
@@ -90,6 +93,31 @@ function App() {
                 processes={simulationProcesses}
                 setReset={setReset}
                 delay={delay}
+              />
+            )}
+            {selectedButton === 2 && (
+              <RateMonotonic
+                processes={simulationProcesses}
+                setReset={setReset}
+                delay={delay}
+              />
+            )}
+            {selectedButton === 3 && (
+              <EarliestDeadline
+                processes={simulationProcesses}
+                setReset={setReset}
+                delay={delay}
+                quantum={3}
+                overload={1}
+              />
+            )}
+            {selectedButton === 4 && (
+              <RoundRobin
+                processes={simulationProcesses}
+                setReset={setReset}
+                delay={delay}
+                quantum={1}
+                overload={1}
               />
             )}
           </div>
