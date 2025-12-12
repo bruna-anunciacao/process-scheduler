@@ -111,9 +111,33 @@ export default function RateMonotonic({ processes, setReset, delay }) {
             });
         }
 
+        readyQueue.forEach((job, idx) => {
+          if (idx > 0) {
+            const otherTaskData = timeline.get(job.taskId);
+            const otherLastSegment = otherTaskData.segments[otherTaskData.segments.length - 1];
+
+            const waitStart = (otherLastSegment && otherLastSegment.endTime > job.releaseTime)
+              ? Math.max(otherLastSegment.endTime, startTime)
+              : Math.max(job.releaseTime, startTime);
+
+            if (waitStart < endTime) {
+               if (otherLastSegment && otherLastSegment.isWaiting && otherLastSegment.endTime === waitStart) {
+                   otherLastSegment.endTime = endTime;
+               } else {
+                   otherTaskData.segments.push({
+                     startTime: waitStart,
+                     endTime: endTime,
+                     isOverload: false,
+                     isDeadlineFinished: false,
+                     isWaiting: true
+                   });
+               }
+            }
+          }
+        });
+
         if (activeJob.remainingTime <= 0) {
           readyQueue.shift();
-
           totalTurnaround += (endTime - activeJob.releaseTime);
           finishedJobs++;
         }

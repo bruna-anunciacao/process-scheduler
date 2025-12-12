@@ -13,7 +13,6 @@ export default function DeadlineMonotonic({ processes, setReset, delay }) {
   const gcd = (a, b) => (!b ? a : gcd(b, a % b));
   const lcm = (a, b) => (a * b) / gcd(a, b);
 
-  // Análise de Tempo de Resposta (Mantida igual)
   const calculateResponseTime = (taskIndex, tasks) => {
     const task = tasks[taskIndex];
     let R = task.C;
@@ -53,7 +52,6 @@ export default function DeadlineMonotonic({ processes, setReset, delay }) {
       color: p.color,
     }));
 
-    // Ordenação DM: Menor Deadline = Maior Prioridade
     tasks.sort((a, b) => {
       if (a.D === b.D) return a.T - b.T;
       return a.D - b.D;
@@ -64,7 +62,6 @@ export default function DeadlineMonotonic({ processes, setReset, delay }) {
     const U = tasks.reduce((acc, t) => acc + t.C / t.T, 0);
     setUtilization(U.toFixed(3));
 
-    // RTA Logic
     const rtaResults = [];
     let allSchedulable = true;
     for (let i = 0; i < tasks.length; i++) {
@@ -87,7 +84,6 @@ export default function DeadlineMonotonic({ processes, setReset, delay }) {
     else msg = "✗ Não Escalonável (Sobrecarga U > 1)";
     setSchedulabilityMsg(msg);
 
-    // Simulação
     const hyperperiod = tasks.reduce((acc, t) => lcm(acc, t.T), 1);
     const simulationLimit = Math.min(hyperperiod, 150);
 
@@ -102,7 +98,6 @@ export default function DeadlineMonotonic({ processes, setReset, delay }) {
     let finishedJobs = 0;
 
     while (currentTime < simulationLimit) {
-      // 1. Libera jobs periódicos
       tasks.forEach((task) => {
         if (currentTime % task.T === 0) {
           readyQueue.push({
@@ -117,11 +112,6 @@ export default function DeadlineMonotonic({ processes, setReset, delay }) {
         }
       });
 
-      // --- CORREÇÃO AQUI ---
-      // Removemos o bloco que zerava o remainingTime se (currentTime >= absoluteDeadline).
-      // Agora o processo continua na fila mesmo estourado, permitindo que seja desenhado em preto.
-
-      // 2. Ordena por Prioridade Fixa (DM)
       readyQueue.sort((a, b) => {
         if (a.priority !== b.priority) return a.priority - b.priority;
         return a.releaseTime - b.releaseTime;
@@ -133,57 +123,42 @@ export default function DeadlineMonotonic({ processes, setReset, delay }) {
         const startTime = currentTime;
 
         activeJob.remainingTime -= 1;
-        currentTime += 1; // Avança o relógio
+        currentTime += 1; 
 
         const endTime = currentTime;
 
-        // Verifica se estourou o deadline (Lógica igual ao RM)
         const isDeadlineMiss = endTime > activeJob.absoluteDeadline;
 
         const taskData = timeline.get(activeJob.taskId);
         const lastSegment = taskData.segments[taskData.segments.length - 1];
 
-        // Se o segmento anterior for contínuo e tiver o mesmo estado de deadline (estourado ou não)
         if (
           lastSegment &&
           lastSegment.endTime === startTime &&
           !lastSegment.isWaiting &&
-          lastSegment.isDeadlineFinished === isDeadlineMiss // Compara se o estado "preto" é o mesmo
+          lastSegment.isDeadlineFinished === isDeadlineMiss
         ) {
           lastSegment.endTime = endTime;
         } else {
-          // Cria novo segmento
           taskData.segments.push({
             startTime,
             endTime,
             absoluteDeadline: activeJob.absoluteDeadline,
             isOverload: false,
-            // AQUI É A CHAVE: Passamos isDeadlineMiss para isDeadlineFinished
-            // Isso deve ativar a cor preta/vermelha no seu GanttChart
             isDeadlineFinished: isDeadlineMiss,
             isWaiting: false
           });
         }
 
-        // Job finalizado
-        if (activeJob.remainingTime <= 0) {
-          readyQueue.shift();
-          totalTurnaround += (endTime - activeJob.releaseTime);
-          finishedJobs++;
-        }
-
-        // Marca jobs em espera (Waiting time)
         readyQueue.forEach((job, idx) => {
           if (idx > 0) {
             const otherTaskData = timeline.get(job.taskId);
             const otherLastSegment = otherTaskData.segments[otherTaskData.segments.length - 1];
 
-            // Define o início da espera
             const waitStart = (otherLastSegment && otherLastSegment.endTime > job.releaseTime)
-              ? Math.max(otherLastSegment.endTime, startTime) // waitStart deve ser >= startTime atual
+              ? Math.max(otherLastSegment.endTime, startTime)
               : Math.max(job.releaseTime, startTime);
 
-            // Só adiciona espera se realmente houve tempo ocioso para essa tarefa nesse tick
             if (waitStart < endTime) {
                if (otherLastSegment && otherLastSegment.isWaiting && otherLastSegment.endTime === waitStart) {
                    otherLastSegment.endTime = endTime;
@@ -200,8 +175,13 @@ export default function DeadlineMonotonic({ processes, setReset, delay }) {
           }
         });
 
+        if (activeJob.remainingTime <= 0) {
+          readyQueue.shift();
+          totalTurnaround += (endTime - activeJob.releaseTime);
+          finishedJobs++;
+        }
+
       } else {
-        // CPU Ociosa
         currentTime += 1;
       }
     }
@@ -225,7 +205,7 @@ export default function DeadlineMonotonic({ processes, setReset, delay }) {
           className={`${s.baseBtn} ${startScheduler ? s.disabledBtn : s.startBtn}`}
           disabled={startScheduler}
         >
-          Iniciar Simulação DM
+          Iniciar Simulação
         </button>
         <button onClick={resetLocal} className={`${s.baseBtn} ${s.resetBtn}`}>
           Resetar
@@ -257,7 +237,6 @@ export default function DeadlineMonotonic({ processes, setReset, delay }) {
             </div>
           </div>
 
-          {/* Tabela RTA */}
           {responseTimes.length > 0 && (
             <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '5px', fontSize: '0.85em' }}>
               <strong>Análise de Tempo de Resposta (RTA):</strong>

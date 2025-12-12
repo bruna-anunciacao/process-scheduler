@@ -9,6 +9,8 @@ export default function GanttChart({ schedulerMatrix, schedulerType, delay }) {
   const barPadding = 12;
   const labelPadding = 110;
 
+  console.log(schedulerMatrix);
+
   const colors = {
     default: "#059669",
     overload: "#ef4444",
