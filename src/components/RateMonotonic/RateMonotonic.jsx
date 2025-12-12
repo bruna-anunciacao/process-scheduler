@@ -22,13 +22,13 @@ export default function RateMonotonic({ processes, setReset, delay }) {
       id: p.id,
       C: Number(p.time),
       T: Number(p.period || p.time * 2),
-      D: Number(p.deadline || p.period),
+      D: Number(p.period),
       priority: 0,
       color: p.color,
     }));
 
     tasks.sort((a, b) => a.T - b.T);
-    
+
     tasks = tasks.map((t, index) => ({ ...t, priority: index }));
 
     const U = tasks.reduce((acc, t) => acc + t.C / t.T, 0);
@@ -36,7 +36,7 @@ export default function RateMonotonic({ processes, setReset, delay }) {
 
     const n = tasks.length;
     const bound = n * (Math.pow(2, 1 / n) - 1);
-    
+
     let msg = "";
     if (U <= bound) {
       msg = "Escalonável (Teste LL Aprovado)";
@@ -52,8 +52,8 @@ export default function RateMonotonic({ processes, setReset, delay }) {
 
     let currentTime = 0;
     let readyQueue = [];
-    let timeline = new Map(); 
-    
+    let timeline = new Map();
+
     tasks.forEach(t => timeline.set(t.id, { ...t, segments: [] }));
 
     let jobCounter = 0;
@@ -84,19 +84,19 @@ export default function RateMonotonic({ processes, setReset, delay }) {
 
       if (activeJob) {
         const startTime = currentTime;
-        
+
         activeJob.remainingTime -= 1;
         currentTime += 1;
-        
+
         const endTime = currentTime;
         const isDeadlineMiss = endTime > activeJob.absoluteDeadline;
 
         const taskData = timeline.get(activeJob.taskId);
-        
+
         const lastSegment = taskData.segments[taskData.segments.length - 1];
         if (
-            lastSegment && 
-            lastSegment.endTime === startTime && 
+            lastSegment &&
+            lastSegment.endTime === startTime &&
             !lastSegment.isWaiting &&
             lastSegment.isDeadlineFinished === isDeadlineMiss
         ) {
@@ -113,7 +113,7 @@ export default function RateMonotonic({ processes, setReset, delay }) {
 
         if (activeJob.remainingTime <= 0) {
           readyQueue.shift();
-          
+
           totalTurnaround += (endTime - activeJob.releaseTime);
           finishedJobs++;
         }
@@ -152,14 +152,14 @@ export default function RateMonotonic({ processes, setReset, delay }) {
           <div className={s.statsContainer}>
             <div className={s.turnaroundBadge}>
               <span>Utilização (U):</span>
-              <span 
+              <span
                 className={s.turnaroundValue}
                 style={{ color: parseFloat(utilization) > 1 ? '#ef4444' : '#059669' }}
               >
                 {utilization}
               </span>
             </div>
-            
+
             <div className={s.turnaroundBadge} style={{gridColumn: 'span 2'}}>
                <span style={{fontSize: '0.8rem'}}>{schedulabilityMsg}</span>
             </div>
@@ -169,11 +169,11 @@ export default function RateMonotonic({ processes, setReset, delay }) {
               <span className={s.turnaroundValue}>{turnAroundTime}ms</span>
             </div>
           </div>
-          
-          <GanttChart 
-            schedulerMatrix={schedulerMatrix} 
+
+          <GanttChart
+            schedulerMatrix={schedulerMatrix}
             schedulerType="RM"
-            delay={delay} 
+            delay={delay}
           />
         </div>
       )}

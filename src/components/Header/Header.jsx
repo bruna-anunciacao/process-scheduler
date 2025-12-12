@@ -13,7 +13,7 @@ export default function Header({selectedButton, setSelectedButton, setDelay, del
       <section className={s.displayMethod}>
         <h1>Método:</h1>
         <ul className={s.methodSelection}>
-          <li>
+          {/* <li>
             <button
               className={selectedButton == 0 ? s.selectedButton : s.notSelectedButton}
               onClick={() => setSelectedButton(0)}
@@ -24,14 +24,14 @@ export default function Header({selectedButton, setSelectedButton, setDelay, del
               className={selectedButton == 1 ? s.selectedButton : s.notSelectedButton}
               onClick={() => setSelectedButton(1)}
             >SJF</button>
-          </li>
+          </li> */}
           <li>
             <button
-              className={selectedButton == 2 ? s.selectedButton : s.notSelectedButton}
-              onClick={() => setSelectedButton(2)}
+              className={selectedButton == 0 ? s.selectedButton : s.notSelectedButton}
+              onClick={() => setSelectedButton(0)}
             >RM</button>
           </li>
-          <li>
+          {/* <li>
             <button
               className={selectedButton == 3 ? s.selectedButton : s.notSelectedButton}
               onClick={() => setSelectedButton(3)}
@@ -42,6 +42,12 @@ export default function Header({selectedButton, setSelectedButton, setDelay, del
               className={selectedButton == 4 ? s.selectedButton : s.notSelectedButton}
               onClick={() => setSelectedButton(4)}
             >RR</button>
+          </li> */}
+          <li>
+            <button
+              className={selectedButton == 1 ? s.selectedButton : s.notSelectedButton}
+              onClick={() => setSelectedButton(1)}
+            >DM</button>
           </li>
         </ul>
       </section>

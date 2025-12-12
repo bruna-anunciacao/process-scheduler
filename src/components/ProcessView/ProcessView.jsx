@@ -49,7 +49,7 @@ export default function ProcessView({ processes, setProcesses, schedulerType = "
       <div onClick={handleAddNewProcess} className={s.addProcessBtn}>
         <p>+ Nova Tarefa</p>
       </div>
-      
+
       {processes.map((process) => (
         <div key={process.id} className={s.eachProcess}>
           <div className={s.cardHeader}>
@@ -62,10 +62,10 @@ export default function ProcessView({ processes, setProcesses, schedulerType = "
               ×
             </button>
           </div>
-          
+
           <div className={s.cardBody}>
             <div className={s.inputsGrid}>
-              
+
               <div className={s.inputGroup}>
                 <label>{isRealTime ? "Offset (O)" : "Chegada"}</label>
                 <input
@@ -123,7 +123,7 @@ export default function ProcessView({ processes, setProcesses, schedulerType = "
                 />
               </div>
 
-              {!isRealTime && (
+              {/* {!isRealTime && (
                 <div className={s.inputGroup}>
                   <label>Ciclos</label>
                   <input
@@ -137,7 +137,7 @@ export default function ProcessView({ processes, setProcesses, schedulerType = "
                     disabled={process.period <= 0}
                   />
                 </div>
-              )}
+              )} */}
             </div>
           </div>
         </div>

@@ -9,7 +9,6 @@ export default function ProcessSubtitle({ colors, schedulerType }) {
       ]
     : [
         { color: colors.default, label: "Executando" },
-        { color: colors.overload, label: "Sobrecarga" },
         { color: colors.deadlineFinished, label: "Deadline Estourado" },
         { color: colors.waiting, label: "Esperando" },
       ];
