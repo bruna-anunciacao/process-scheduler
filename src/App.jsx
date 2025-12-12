@@ -97,7 +97,7 @@ function App() {
             )}
             {selectedButton === 2 && (
               <RateMonotonic
-                processes={simulationProcesses}
+                processes={processes}
                 setReset={setReset}
                 delay={delay}
               />
