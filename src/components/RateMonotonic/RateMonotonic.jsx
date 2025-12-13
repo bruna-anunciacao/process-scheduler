@@ -23,6 +23,7 @@ export default function RateMonotonic({ processes, setReset, delay }) {
       C: Number(p.time),
       T: Number(p.period || p.time * 2),
       D: Number(p.period),
+      Arrival: Number(p.arrival || 0),
       priority: 0,
       color: p.color,
     }));
@@ -48,13 +49,15 @@ export default function RateMonotonic({ processes, setReset, delay }) {
     setSchedulabilityMsg(msg);
 
     const hyperperiod = tasks.reduce((acc, t) => lcm(acc, t.T), 1);
-    const simulationLimit = Math.min(hyperperiod, 100);
+    
+    const maxArrival = Math.max(...tasks.map(t => t.Arrival));
+    const simulationLimit = Math.min(hyperperiod + maxArrival, 100); 
 
     let currentTime = 0;
     let readyQueue = [];
     let timeline = new Map();
 
-    tasks.forEach(t => timeline.set(t.id, { ...t, segments: [] }));
+    tasks.forEach((t) => timeline.set(t.id, { ...t, segments: [] }));
 
     let jobCounter = 0;
     let totalTurnaround = 0;
@@ -62,7 +65,10 @@ export default function RateMonotonic({ processes, setReset, delay }) {
 
     while (currentTime < simulationLimit) {
       tasks.forEach((task) => {
-        if (currentTime % task.T === 0) {
+        if (
+          currentTime >= task.Arrival && 
+          (currentTime - task.Arrival) % task.T === 0
+        ) {
           readyQueue.push({
             uniqueId: jobCounter++,
             taskId: task.id,
@@ -70,7 +76,7 @@ export default function RateMonotonic({ processes, setReset, delay }) {
             absoluteDeadline: currentTime + task.D,
             releaseTime: currentTime,
             priority: task.priority,
-            started: false
+            started: false,
           });
         }
       });
@@ -93,52 +99,60 @@ export default function RateMonotonic({ processes, setReset, delay }) {
 
         const taskData = timeline.get(activeJob.taskId);
 
-        const lastSegment = taskData.segments[taskData.segments.length - 1];
+        const lastSegment =
+          taskData.segments[taskData.segments.length - 1];
+        
         if (
-            lastSegment &&
-            lastSegment.endTime === startTime &&
-            !lastSegment.isWaiting &&
-            lastSegment.isDeadlineFinished === isDeadlineMiss
+          lastSegment &&
+          lastSegment.endTime === startTime &&
+          !lastSegment.isWaiting &&
+          lastSegment.isDeadlineFinished === isDeadlineMiss
         ) {
-            lastSegment.endTime = endTime;
+          lastSegment.endTime = endTime;
         } else {
-            taskData.segments.push({
-                startTime,
-                endTime,
-                isOverload: false,
-                isDeadlineFinished: isDeadlineMiss,
-                isWaiting: false
-            });
+          taskData.segments.push({
+            startTime,
+            endTime,
+            isOverload: false,
+            isDeadlineFinished: isDeadlineMiss,
+            isWaiting: false,
+          });
         }
 
         readyQueue.forEach((job, idx) => {
           if (idx > 0) {
             const otherTaskData = timeline.get(job.taskId);
-            const otherLastSegment = otherTaskData.segments[otherTaskData.segments.length - 1];
+            const otherLastSegment =
+              otherTaskData.segments[otherTaskData.segments.length - 1];
 
-            const waitStart = (otherLastSegment && otherLastSegment.endTime > job.releaseTime)
-              ? Math.max(otherLastSegment.endTime, startTime)
-              : Math.max(job.releaseTime, startTime);
+            const waitStart =
+              otherLastSegment && otherLastSegment.endTime > job.releaseTime
+                ? Math.max(otherLastSegment.endTime, startTime)
+                : Math.max(job.releaseTime, startTime);
 
             if (waitStart < endTime) {
-               if (otherLastSegment && otherLastSegment.isWaiting && otherLastSegment.endTime === waitStart) {
-                   otherLastSegment.endTime = endTime;
-               } else {
-                   otherTaskData.segments.push({
-                     startTime: waitStart,
-                     endTime: endTime,
-                     isOverload: false,
-                     isDeadlineFinished: false,
-                     isWaiting: true
-                   });
-               }
+              if (
+                otherLastSegment &&
+                otherLastSegment.isWaiting &&
+                otherLastSegment.endTime === waitStart
+              ) {
+                otherLastSegment.endTime = endTime;
+              } else {
+                otherTaskData.segments.push({
+                  startTime: waitStart,
+                  endTime: endTime,
+                  isOverload: false,
+                  isDeadlineFinished: false,
+                  isWaiting: true,
+                });
+              }
             }
           }
         });
 
         if (activeJob.remainingTime <= 0) {
           readyQueue.shift();
-          totalTurnaround += (endTime - activeJob.releaseTime);
+          totalTurnaround += endTime - activeJob.releaseTime;
           finishedJobs++;
         }
       } else {
@@ -146,7 +160,9 @@ export default function RateMonotonic({ processes, setReset, delay }) {
       }
     }
 
-    setTurnAroundTime(finishedJobs > 0 ? (totalTurnaround / finishedJobs).toFixed(2) : 0);
+    setTurnAroundTime(
+      finishedJobs > 0 ? (totalTurnaround / finishedJobs).toFixed(2) : 0
+    );
     setSchedulerMatrix(Array.from(timeline.values()));
   };
 
@@ -161,13 +177,15 @@ export default function RateMonotonic({ processes, setReset, delay }) {
       <div className={s.btnWrapper}>
         <button
           onClick={startRM}
-          className={`${s.baseBtn} ${startScheduler ? s.disabledBtn : s.startBtn}`}
+          className={`${s.baseBtn} ${
+            startScheduler ? s.disabledBtn : s.startBtn
+          }`}
           disabled={startScheduler}
         >
           Iniciar Simulação
         </button>
         <button onClick={resetLocal} className={`${s.baseBtn} ${s.resetBtn}`}>
-          Resetar
+          Apagar
         </button>
       </div>
 
@@ -178,14 +196,19 @@ export default function RateMonotonic({ processes, setReset, delay }) {
               <span>Utilização (U):</span>
               <span
                 className={s.turnaroundValue}
-                style={{ color: parseFloat(utilization) > 1 ? '#ef4444' : '#059669' }}
+                style={{
+                  color: parseFloat(utilization) > 1 ? "#ef4444" : "#059669",
+                }}
               >
                 {utilization}
               </span>
             </div>
 
-            <div className={s.turnaroundBadge} style={{gridColumn: 'span 2'}}>
-               <span style={{fontSize: '0.8rem'}}>{schedulabilityMsg}</span>
+            <div
+              className={s.turnaroundBadge}
+              style={{ gridColumn: "span 2" }}
+            >
+              <span style={{ fontSize: "0.8rem" }}>{schedulabilityMsg}</span>
             </div>
 
             <div className={s.turnaroundBadge}>

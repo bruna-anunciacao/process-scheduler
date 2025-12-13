@@ -47,7 +47,10 @@ export default function DeadlineMonotonic({ processes, setReset, delay }) {
       id: p.id,
       C: Number(p.time),
       T: Number(p.period || p.time * 2),
-      D: Number(p.deadline || p.period || p.time * 2),
+      D: Number(p.deadline !== "" && p.deadline !== undefined && Number(p.deadline) > 0 
+          ? p.deadline 
+          : p.period),
+      Arrival: Number(p.arrival || 0),
       priority: 0,
       color: p.color,
     }));
@@ -85,7 +88,12 @@ export default function DeadlineMonotonic({ processes, setReset, delay }) {
     setSchedulabilityMsg(msg);
 
     const hyperperiod = tasks.reduce((acc, t) => lcm(acc, t.T), 1);
-    const simulationLimit = Math.min(hyperperiod, 150);
+    const maxArrival = Math.max(...tasks.map(t => t.Arrival));
+    
+    let calculatedLimit = hyperperiod + maxArrival;
+    if (calculatedLimit < 20) calculatedLimit = 20; 
+    
+    const simulationLimit = Math.min(calculatedLimit, 150);
 
     let currentTime = 0;
     let readyQueue = [];
@@ -99,7 +107,10 @@ export default function DeadlineMonotonic({ processes, setReset, delay }) {
 
     while (currentTime < simulationLimit) {
       tasks.forEach((task) => {
-        if (currentTime % task.T === 0) {
+        if (
+            currentTime >= task.Arrival && 
+            (currentTime - task.Arrival) % task.T === 0
+        ) {
           readyQueue.push({
             uniqueId: jobCounter++,
             taskId: task.id,
@@ -208,7 +219,7 @@ export default function DeadlineMonotonic({ processes, setReset, delay }) {
           Iniciar Simulação
         </button>
         <button onClick={resetLocal} className={`${s.baseBtn} ${s.resetBtn}`}>
-          Resetar
+          Apagar
         </button>
       </div>
 
