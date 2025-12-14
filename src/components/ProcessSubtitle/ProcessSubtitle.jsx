@@ -2,14 +2,13 @@
 import s from "./ProcessSubtitle.module.css";
 
 export default function ProcessSubtitle({ colors, schedulerType }) {
-  const subtitleItems = (schedulerType === "FIFO" || schedulerType === "SJF") 
+  const subtitleItems = (schedulerType === "FIFO" || schedulerType === "SJF")
     ? [
         { color: colors.default, label: "Executando" },
         { color: colors.waiting, label: "Esperando" },
-      ] 
+      ]
     : [
         { color: colors.default, label: "Executando" },
-        { color: colors.overload, label: "Sobrecarga" },
         { color: colors.deadlineFinished, label: "Deadline Estourado" },
         { color: colors.waiting, label: "Esperando" },
       ];

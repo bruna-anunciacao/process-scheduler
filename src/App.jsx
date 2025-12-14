@@ -5,6 +5,10 @@ import Header from "./components/Header/Header";
 import ProcessView from "./components/ProcessView/ProcessView";
 import Fifo from "./components/Fifo/Fifo";
 import ShortestJob from "./components/ShortestJob/ShortestJob";
+import RateMonotonic from "./components/RateMonotonic/RateMonotonic";
+import DeadlineMonotonic from "./components/DeadlineMonotonic/DeadlineMonotonic";
+import EarliestDeadline from "./components/EarliestDeadline/EarliestDeadline";
+import RoundRobin from "./components/RoundRobin/RoundRobin";
 
 // Styles
 import s from "./App.module.css";
@@ -78,7 +82,7 @@ function App() {
           <ProcessView processes={processes} setProcesses={setProcesses} />
           <div className={s.line} />
           <div className={s.algorithmArea}>
-            {selectedButton === 0 && (
+            {/* {selectedButton === 0 && (
               <Fifo
                 processes={simulationProcesses}
                 setReset={setReset}
@@ -88,6 +92,29 @@ function App() {
             {selectedButton === 1 && (
               <ShortestJob
                 processes={simulationProcesses}
+                setReset={setReset}
+                delay={delay}
+              />
+            )} */}
+            {selectedButton === 0 && (
+              <RateMonotonic
+                processes={processes}
+                setReset={setReset}
+                delay={delay}
+              />
+            )}
+            {/* {selectedButton === 3 && (
+              <EarliestDeadline
+                processes={simulationProcesses}
+                setReset={setReset}
+                delay={delay}
+                quantum={3}
+                overload={1}
+              />
+            )} */}
+            {selectedButton === 1 && (
+              <DeadlineMonotonic
+                processes={processes}
                 setReset={setReset}
                 delay={delay}
               />

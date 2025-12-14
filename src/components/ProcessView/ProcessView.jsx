@@ -1,7 +1,8 @@
-// Styles
 import s from "./ProcessView.module.css";
 
-export default function ProcessView({ processes, setProcesses }) {
+export default function ProcessView({ processes, setProcesses, schedulerType = "" }) {
+  const isRealTime = schedulerType === "RM" || schedulerType === "EDF";
+
   const handleAddNewProcess = () => {
     setProcesses([
       ...processes,
@@ -11,7 +12,7 @@ export default function ProcessView({ processes, setProcesses }) {
         deadline: 0,
         arrival: 0,
         priority: 0,
-        period: 0,
+        period: isRealTime ? 10 : 0,
         cycles: 1,
         status: "Waiting",
       },
@@ -46,12 +47,13 @@ export default function ProcessView({ processes, setProcesses }) {
   return (
     <section className={s.processViewWrapper}>
       <div onClick={handleAddNewProcess} className={s.addProcessBtn}>
-        <p>Criar processo</p>
+        <p>+ Nova Tarefa</p>
       </div>
+
       {processes.map((process) => (
         <div key={process.id} className={s.eachProcess}>
           <div className={s.cardHeader}>
-            <span>Processo #{process.id}</span>
+            <span>{isRealTime ? `Tarefa τ${process.id}` : `Processo #${process.id}`}</span>
             <button
               className={s.deleteBtn}
               onClick={handleRemove(process.id)}
@@ -60,10 +62,12 @@ export default function ProcessView({ processes, setProcesses }) {
               ×
             </button>
           </div>
+
           <div className={s.cardBody}>
             <div className={s.inputsGrid}>
+
               <div className={s.inputGroup}>
-                <label>Chegada</label>
+                <label>{isRealTime ? "Offset (O)" : "Chegada"}</label>
                 <input
                   className={s.styledInput}
                   type="number"
@@ -76,7 +80,7 @@ export default function ProcessView({ processes, setProcesses }) {
               </div>
 
               <div className={s.inputGroup}>
-                <label>Tempo</label>
+                <label>{isRealTime ? "Execução (C)" : "Tempo"}</label>
                 <input
                   className={s.styledInput}
                   type="number"
@@ -89,11 +93,29 @@ export default function ProcessView({ processes, setProcesses }) {
               </div>
 
               <div className={s.inputGroup}>
-                <label>Deadline</label>
+                <label style={{ color: isRealTime ? "#059669" : "inherit" }}>
+                  {isRealTime ? "Período (T)" : "Período"}
+                </label>
                 <input
                   className={s.styledInput}
                   type="number"
                   min="0"
+                  placeholder={isRealTime ? "Obrigatório" : "0 = Único"}
+                  value={process.period}
+                  onChange={(e) =>
+                    handleInputChange(process.id, "period", e.target.value)
+                  }
+                  style={isRealTime && process.period === 0 ? { borderColor: "#ef4444" } : {}}
+                />
+              </div>
+
+              <div className={s.inputGroup}>
+                <label>Deadline (D)</label>
+                <input
+                  className={s.styledInput}
+                  type="number"
+                  min="0"
+                  placeholder={isRealTime ? `D = T (${process.period})` : "0"}
                   value={process.deadline}
                   onChange={(e) =>
                     handleInputChange(process.id, "deadline", e.target.value)
@@ -101,44 +123,21 @@ export default function ProcessView({ processes, setProcesses }) {
                 />
               </div>
 
-              <div className={s.inputGroup}>
-                <label>Prioridade</label>
-                <input
-                  className={s.styledInput}
-                  type="number"
-                  min="0"
-                  value={process.priority}
-                  onChange={(e) =>
-                    handleInputChange(process.id, "priority", e.target.value)
-                  }
-                />
-              </div>
-              <div className={s.inputGroup}>
-                <label>Período</label>
-                <input
-                  className={s.styledInput}
-                  type="number"
-                  min="0"
-                  placeholder="0 = Único"
-                  value={process.period}
-                  onChange={(e) =>
-                    handleInputChange(process.id, "period", e.target.value)
-                  }
-                />
-              </div>
-              <div className={s.inputGroup}>
-                <label>Ciclos</label>
-                <input
-                  className={s.styledInput}
-                  type="number"
-                  min="1"
-                  value={process.cycles}
-                  onChange={(e) =>
-                    handleInputChange(process.id, "cycles", e.target.value)
-                  }
-                  disabled={process.period <= 0}
-                />
-              </div>
+              {/* {!isRealTime && (
+                <div className={s.inputGroup}>
+                  <label>Ciclos</label>
+                  <input
+                    className={s.styledInput}
+                    type="number"
+                    min="1"
+                    value={process.cycles}
+                    onChange={(e) =>
+                      handleInputChange(process.id, "cycles", e.target.value)
+                    }
+                    disabled={process.period <= 0}
+                  />
+                </div>
+              )} */}
             </div>
           </div>
         </div>
