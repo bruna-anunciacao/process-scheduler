@@ -8,9 +8,33 @@ export default function RateMonotonic({ processes, setReset, delay }) {
   const [schedulerMatrix, setSchedulerMatrix] = useState([]);
   const [utilization, setUtilization] = useState(0);
   const [schedulabilityMsg, setSchedulabilityMsg] = useState("");
+  const [responseTimes, setResponseTimes] = useState([]);
 
   const gcd = (a, b) => (!b ? a : gcd(b, a % b));
   const lcm = (a, b) => (a * b) / gcd(a, b);
+
+  const calculateResponseTime = (taskIndex, tasks) => {
+    const task = tasks[taskIndex];
+    let R = task.C;
+    let prevR = 0;
+
+    if (R > task.D) return R;
+
+    while (Math.abs(R - prevR) > 0.001) {
+      prevR = R;
+      let interference = 0;
+
+      for (let j = 0; j < taskIndex; j++) {
+        const hpTask = tasks[j];
+        interference += Math.ceil(R / hpTask.T) * hpTask.C;
+      }
+
+      R = task.C + interference;
+
+      if (R > task.D) return R;
+    }
+    return R;
+  };
 
   const startRM = () => {
     if (processes.length === 0) return;
@@ -38,6 +62,24 @@ export default function RateMonotonic({ processes, setReset, delay }) {
     const n = tasks.length;
     const bound = n * (Math.pow(2, 1 / n) - 1);
 
+    const rtaResults = [];
+    let allSchedulable = true;
+    for (let i = 0; i < tasks.length; i++) {
+        const R = calculateResponseTime(i, tasks);
+        const isSchedulable = R <= tasks[i].D;
+
+        rtaResults.push({
+            taskId: tasks[i].id,
+            deadline: tasks[i].D,
+            period: tasks[i].T,
+            responseTime: R.toFixed(2),
+            schedulable: isSchedulable
+        });
+
+        if (!isSchedulable) allSchedulable = false;
+    }
+    setResponseTimes(rtaResults);
+
     let msg = "";
     if (U <= bound) {
       msg = "Escalonável (Teste LL Aprovado)";
@@ -49,9 +91,9 @@ export default function RateMonotonic({ processes, setReset, delay }) {
     setSchedulabilityMsg(msg);
 
     const hyperperiod = tasks.reduce((acc, t) => lcm(acc, t.T), 1);
-    
+
     const maxArrival = Math.max(...tasks.map(t => t.Arrival));
-    const simulationLimit = Math.min(hyperperiod + maxArrival, 100); 
+    const simulationLimit = Math.min(hyperperiod + maxArrival, 100);
 
     let currentTime = 0;
     let readyQueue = [];
@@ -66,7 +108,7 @@ export default function RateMonotonic({ processes, setReset, delay }) {
     while (currentTime < simulationLimit) {
       tasks.forEach((task) => {
         if (
-          currentTime >= task.Arrival && 
+          currentTime >= task.Arrival &&
           (currentTime - task.Arrival) % task.T === 0
         ) {
           readyQueue.push({
@@ -101,7 +143,7 @@ export default function RateMonotonic({ processes, setReset, delay }) {
 
         const lastSegment =
           taskData.segments[taskData.segments.length - 1];
-        
+
         if (
           lastSegment &&
           lastSegment.endTime === startTime &&
@@ -169,6 +211,7 @@ export default function RateMonotonic({ processes, setReset, delay }) {
   const resetLocal = () => {
     setStartScheduler(false);
     setSchedulerMatrix([]);
+    setResponseTimes([]);
     setReset(true);
   };
 
@@ -216,6 +259,35 @@ export default function RateMonotonic({ processes, setReset, delay }) {
               <span className={s.turnaroundValue}>{turnAroundTime}ms</span>
             </div>
           </div>
+
+          {/* TABELA DE ANÁLISE RTA */}
+          {responseTimes.length > 0 && (
+            <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '5px', fontSize: '0.85em' }}>
+              <strong>Análise de Tempo de Resposta (RTA) - Rate Monotonic:</strong>
+              <table style={{width: '100%', marginTop: '8px', borderCollapse: 'collapse'}}>
+                <thead>
+                  <tr style={{backgroundColor: '#e0e0e0'}}>
+                    <th style={{padding: '5px', border: '1px solid #ccc'}}>Tarefa</th>
+                    <th style={{padding: '5px', border: '1px solid #ccc'}}>Período (T)</th>
+                    <th style={{padding: '5px', border: '1px solid #ccc'}}>R Calc (ms)</th>
+                    <th style={{padding: '5px', border: '1px solid #ccc'}}>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {responseTimes.map((rt, idx) => (
+                    <tr key={idx}>
+                      <td style={{padding: '5px', border: '1px solid #ccc', textAlign: 'center'}}>τ{rt.taskId}</td>
+                      <td style={{padding: '5px', border: '1px solid #ccc', textAlign: 'center'}}>{rt.period}</td>
+                      <td style={{padding: '5px', border: '1px solid #ccc', textAlign: 'center'}}>{rt.responseTime}</td>
+                      <td style={{padding: '5px', border: '1px solid #ccc', textAlign: 'center', color: rt.schedulable ? '#4caf50' : '#f44336', fontWeight: 'bold'}}>
+                        {rt.schedulable ? '✓' : '✗'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
 
           <GanttChart
             schedulerMatrix={schedulerMatrix}
